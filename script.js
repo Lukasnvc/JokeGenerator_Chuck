@@ -1,30 +1,43 @@
+
+      
+
 let arr=JSON.parse(localStorage.getItem('jokes')) || [];
 
-function obj(joke, date, color){
+function obj(joke, date, picture, color){
   this.joke= joke;
   this.date= date;
+  this.picture= picture;
   this.color= color;
 }
 
-fetch(`https://api.chucknorris.io/jokes/random`)
-  .then((response) => {
-    if (response.ok) {
+let index = Math.floor(Math.random() * (20 - 0) + 0)
+Promise.all([
+  fetch(`https://api.chucknorris.io/jokes/random`),
+  fetch(`https://picsum.photos/v2/list?page=${index}`)
+]).then(function (responses) {
+  return Promise.all(responses.map(function (response) {
     return response.json();
-    }
-  })
-  .then((jokes) => {
-    store(jokes)
-  })
-  .catch((error) => console.log(error))
+  }));
+}).then(function (data) {
+  
+  const jokes = data[0];
+  const pictures = data[1];
+  picture= pictures[index];
+  store(jokes, picture)
+}).catch(function (error) {
+  console.log(error);
+})
 
 
-  const store = (jokes) => {
+  const store = (jokes, picture) => {
     const btn = document.querySelector('#newJoke');
     btn.addEventListener('click', (e)=>{
       e.preventDefault()
 
-      let jokeToArray = new obj(`${jokes}`, `${Date()}`);
+      let jokeToArray = new obj(`${jokes}`, `${picture}`, `${Date()}`);
+      jokeToArray.date=Date();
       jokeToArray.joke=jokes.value;
+      jokeToArray.picture=picture.download_url
       arr.push(jokeToArray);
       localStorage.setItem('jokes', JSON.stringify(arr))
 
@@ -48,9 +61,10 @@ fetch(`https://api.chucknorris.io/jokes/random`)
       randomColor.setAttribute('class', 'randomColor')
       randomColor.textContent= 'Random card color';
       
-      const pic = document.createElement('div');
-      pic.style.width= '50px';
-      pic.src=jokes.icon_url;
+      const pic = document.createElement('img');
+      pic.src=element.picture;
+      
+
 
       const p = document.createElement('p');
       p.setAttribute('class', 'joke')
@@ -128,5 +142,8 @@ fetch(`https://api.chucknorris.io/jokes/random`)
     })
   }
   letters()
+
+  
+
 
  
